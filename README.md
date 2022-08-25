@@ -101,4 +101,6 @@ hello-k8s                                                latest              057
 <none>                                                   <none>              aa838cbddba9   51 seconds ago   358MB
 <none>                                                   <none>              8552b72f0e54   51 seconds ago   395MB
 adoptopenjdk/openjdk11                                   jdk-11.0.2.9-slim   9a223081d1a1   3 years ago      358MB
+
+# Các image layer sẽ được stack lên nhau, càng nhiều layer thì image đó càng to. Image layer này cũng đc dùng để cached, để lần sau build image thì sẽ nhanh hơn.
 ```
