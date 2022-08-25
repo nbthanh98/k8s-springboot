@@ -10,7 +10,7 @@
 
 Phần này sẽ tập chung giới thiệu một số thành phần cơ bản của Kubernetes và những gì mà Kubernetes có thể làm được.
 
-&#x20;<img src="images/k8s-architecture.png" alt="" data-size="original">
+&#x20;<img src="images/2.png" alt="" data-size="original">
 
 Trên hình thì thấy `Kubernetes architecture` gồm có như:
 
