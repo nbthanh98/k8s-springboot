@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-k8s
+  namespace: default
+  labels:
+    app: hello-k8s
+spec:
+  containers:
+  - name: hello-k8s
+    image: thanhnb1/hello-k8s:latest
+    resources:
+      limits:
+        cpu: 200m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 200Mi
+    env:
+    - name: SERVER_PORT
+      value: "8080"
+    - name: ENV
+      value: dev
+    - name: DATABASE_URL
+      value: jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+    - name: DATABASE_USER
+      value: root
+    - name: DATABASE_PASSWORD
+      value: password
+    ports:
+    - containerPort:  8080
+      name:  http
+  restartPolicy: Always
