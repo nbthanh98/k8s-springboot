@@ -29,6 +29,7 @@ Trên hình thì thấy `Kubernetes architecture` gồm có như:
 ## **2. Deploy Spring boot application lên Kubernetes.**
 Phần này sẽ deploy spring boot service từ docker cho đến Kubernetes.
 
+### **2.1 Deploy spring boot application với docker**
 API:
 ```java
 package com.thanhnb.demok8s.controllers;
@@ -53,12 +54,12 @@ DockerFile:
 FROM adoptopenjdk/openjdk11:jdk-11.0.2.9-slim
 WORKDIR /opt
 COPY build/libs/demo-k8s-0.0.1-SNAPSHOT.jar /opt/app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java","-jar","/opt/app.jar"]
 ```
 - **FROM**: Dockerfile thì cần define một cái base image layer, trong trường hợp này là `adoptopenjdk/openjdk11:jdk-11.0.2.9-slim`. Trong image này đã có được cài sẵn JDK11, image layer này sẽ đc làm môi trường để chạy lệnh dưới trong Dockerfile.
 - **WORKDIR**: Là sẽ set working directory là folder `/opt`. Các lệnh phía dưới Dockerfile sẽ được thực hiện bên trong folder `/opt`.
 - **COPY**: Thực hiện copy file jar từ `build/libs/` vào folder `/opt/`.
-- **ENTRYPOINT**: Sẽ chạy câu lệnh `"java","-jar","/app.jar"` bên trong containers.
+- **ENTRYPOINT**: Sẽ chạy câu lệnh `"java","-jar","/opt/app.jar"` bên trong containers.
 
 Build image:
 ```docker
@@ -104,3 +105,137 @@ adoptopenjdk/openjdk11                                   jdk-11.0.2.9-slim   9a2
 
 # Các image layer sẽ được stack lên nhau, càng nhiều layer thì image đó càng to. Image layer này cũng đc dùng để cached, để lần sau build image thì sẽ nhanh hơn.
 ```
+Run container:
+```Docker
+docker ps
+docker run --name hello-k8s -p 8080:8080 hello-k8s:latest
+
+CONTAINER ID   IMAGE              COMMAND                  CREATED          STATUS             PORTS                                                  NAMES
+603a3a05ba43   hello-k8s:latest   "java -jar /opt/app.…"   28 seconds ago   Up 27 seconds      0.0.0.0:8080->8080/tcp, :::8080->8080/tcp              hello-k8s
+97e96887af2a   mysql:5.7          "docker-entrypoint.s…"   21 hours ago     Up About an hour   0.0.0.0:3306->3306/tcp, :::3306->3306/tcp, 33060/tcp   demok8s_db_1
+```
+
+Push docker image lên dockerhub:
+```docker
+docker tag hello-k8s:latest thanhnb1/hello-k8s:latest
+
+docker push thanhnb1/hello-k8s:latest
+The push refers to repository [docker.io/thanhnb1/hello-k8s]
+89434e77b260: Pushed 
+8b338a10df53: Mounted from adoptopenjdk/openjdk11 
+238b684bbac1: Mounted from adoptopenjdk/openjdk11 
+faed2c48e448: Mounted from adoptopenjdk/openjdk11 
+b57c79f4a9f3: Mounted from adoptopenjdk/openjdk11 
+d60e01b37e74: Mounted from adoptopenjdk/openjdk11 
+e45cfbc98a50: Mounted from adoptopenjdk/openjdk11 
+762d8e1a6054: Mounted from adoptopenjdk/openjdk11 
+latest: digest: sha256:018c1ae845eb007936172ff901a0fc492ea66714d497590214474e6561bc6b2e size: 1994
+```
+### **2.2 Deploy spring boot application với Kubernetes**
+
+**1. Chuẩn bị môi trường**:
+
+Ở local thì để tạo nhanh Kubernetes cluster thì có thể dùng [MicroK8s](https://microk8s.io/docs/getting-started) hoặc là [MiniKube](https://computingforgeeks.com/how-to-install-minikube-on-ubuntu-debian-linux/) đều được.
+
+Mình thì đang dùng `MicroK8s` để tạo Kubernetes Cluster ở local. Khi nào dùng thì start lên, không dùng thì stop là xong.
+```
+nbt@nbt:~$ microk8s start
+[sudo] password for nbt: 
+Started.
+
+nbt@nbt:~$ microk8s stop
+Stopped.
+```
+**2. Làm việc với các thành phần cơ bản Kubernetes**
+
+- **Cách define Pod và wraper spring application containers với Pod.** 
+  
+  Define Pod Template: sẽ được chia thành: `apiVersion`, `kind`, `metadata`, `spec`.
+  ```yaml
+  apiVersion: v1
+  kind: Pod # là một loại Object trong Kubernetes.
+  # Phần `metadata` là mô tả về Pod.
+  metadata:
+    name: hello-k8s  # Tên Pod là gì?
+    namespace: default # Pod này đc deploy ở namespace nào?
+    labels:           # Define các labels của Pod.  
+      app: hello-k8s
+  # Phần `spec` này là defile các containers bên trong Pod. 1 Pod có thể chứa 1 hoặc nhiều container. 
+  spec:
+    containers:
+    - name: hello-k8s  # Tên container là gì?
+      image: thanhnb1/hello-k8s:latest # image dùng cho container là gì?
+      resources: # Phần này định nghĩa các request và limit các resource của container.
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 200Mi
+      env: # Define các biến môi trường dùng cho container. Sau sẽ dùng configMap.
+      - name: SERVER_PORT
+        value: "8080"
+      - name: ENV
+        value: dev
+      - name: DATABASE_URL
+        value: jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+      - name: DATABASE_USER
+        value: root
+      - name: DATABASE_PASSWORD
+        value: password
+      ports:
+      - containerPort: 8080 # application bên trong container chạy port là gì?
+        name:  http
+    restartPolicy: Always
+  ```
+  Deploy Pod lên kubernetes và một số command cơ bản với Pod.
+  ```shell
+  # Để deploy Pod lên K8s thì dùng lệnh "kubectl apply -f <path file Pod template> -n <namespace>"
+  kubectl apply -f pod-hello-k8s.yaml 
+  pod/hello-k8s created
+  
+  # Xem các Pod: "kubectl get po -n <namespace>"
+  kubectl get po
+  NAME         READY   STATUS       RESTARTS          AGE
+  hello-k8s    1/1     Running      0                 6s
+
+  # Xem IP của Pod: kubectl get po -o wide
+  NAME      READY   STATUS             RESTARTS         AGE     IP              NODE   NOMINATED NODE   READINESS GATES
+  hello-k8s 1/1     Running            0                7m32s   10.1.28.72      nbt    <none>           <none>
+
+  # Xem chi tiết Pod: "kubectl describe po <tên pod>"
+  # Xem logs của Pod: "kubectl logs -f --tail 500 -n <namespace> <tên pod>"
+  # Xem các biến môi trường bên trong container:
+  #  - Thực hiện access vào bên trong Pod, thêm tham số -c nếu Pod có nhiều containers.
+  #  - Thực hiện lệnh printenv để xem các biên môi trường.
+
+  # Cái IP "10.1.28.72" của Pod sẽ đc assigned cho Pod khi tạo và khi Pod bị xóa thì IP này cũng sẽ thay đổi. IP của Pod là không có định, mỗi lần xóa đi tạo lại Pod thì sẽ đc assigned IP mới.
+  # Có 2 cách để có thể truy cập vào Pod: 
+  # 1. Sử dụng port-forward: "kubectl port-forward <tên pod> <Port-Local>:<Port-container>"
+
+    kubectl port-forward hello-k8s 8080:8080
+    Forwarding from 127.0.0.1:8080 -> 8080
+    Forwarding from [::1]:8080 -> 8080
+    Handling connection for 808
+
+    # test
+    curl http://localhost:8080/hello-k8s
+    /hello-k8s
+
+  # 2. Gọi Pod này từ một Pod khác thông qua IP của Pod.
+      kubectl get po -o wide
+      NAME              READY   STATUS             RESTARTS          AGE   IP              NODE   NOMINATED NODE   READINESS GATES
+      pod-for-test      1/1     Running            62 (25m ago)      46d   10.1.28.113     nbt    <none>           <none>
+      hello-k8s         1/1     Running            0                 19m   10.1.28.72      nbt    <none>           <none>
+
+    # Thực hiện access vào Pod: pod-for-test để call sang pod: hello-k8s theo IP
+    kubectl exec -it po/pod-for-test sh
+
+    # Cài curl để test;
+    apk update && apk upgrade && apk add curl
+
+    # Call Pod: hello-k8s 
+    / # curl http://10.1.28.72:8080/hello-k8s
+    /hello-k8s/ #
+  ```
+
