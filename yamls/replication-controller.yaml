@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: hello-k8s # Tên của ReplicationController.
+spec:
+  replicas: 3    # Số lượng instance muong muốn ở đây là 3.
+  selector:
+    app: hello-k8s
+  template:
+    metadata:
+      name: hello-k8s
+      labels:
+        app: hello-k8s    
+    spec:
+      containers:
+      - name: hello-k8s
+        image: thanhnb1/hello-k8s:latest
+        ports:
+        - containerPort: 8080
