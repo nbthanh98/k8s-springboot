@@ -2,26 +2,26 @@
 ## **Nội dung gồm:**
   - [**1. Giới thiệu một số thành phần cơ bản của Kubernetes.**](#1-giới-thiệu-một-số-thành-phần-cơ-bản-của-kubernetes)
   - [**2. Deploy Spring boot application lên Kubernetes.**](#2-deploy-spring-boot-application-lên-kubernetes)
-  - [**2.1 Deploy spring boot application với docker**](#21-deploy-spring-boot-application-với-docker)
-  - [**2.2 Deploy spring boot application với Kubernetes**](#22-deploy-spring-boot-application-với-kubernetes)
-  - [**2.2.1 Chuẩn bị môi trường**](#221-chuẩn-bị-môi-trường)
-  - [**2.2.2 Làm việc với các thành phần cơ bản Kubernetes**](#222-làm-việc-với-các-thành-phần-cơ-bản-kubernetes)
-    - [**1. Cách define Pod và wraper spring application containers với Pod.**](#1-cách-define-pod-và-wraper-spring-application-containers-với-pod)
-      - [**1.1 Define Pod Template**](#11-define-pod-template)
-      - [**1.2 Deploy Pod lên kubernetes và một số command cơ bản với Pod.**](#12-deploy-pod-lên-kubernetes-và-một-số-command-cơ-bản-với-pod)
-    - [**2. Cách để quản lý các Pods tự động bởi ReplicationController và ReplicaSet**](#2-cách-để-quản-lý-các-pods-tự-động-bởi-replicationcontroller-và-replicaset)
-      - [**2.1 Define `ReplicationController` Template:**](#21-define-replicationcontroller-template)
-      - [**2.2 Deploy `ReplicationController` lên kubernetes và một số command cơ bản với `ReplicationController`.**](#22-deploy-replicationcontroller-lên-kubernetes-và-một-số-command-cơ-bản-với-replicationcontroller)
-      - [**2.3 Define `ReplicaSet` Template:**](#23-define-replicaset-template)
-      - [**2.4 Deploy `ReplicaSet` lên kubernetes và một số command cơ bản với `ReplicaSet`.**](#24-deploy-replicaset-lên-kubernetes-và-một-số-command-cơ-bản-với-replicaset)
-    - [**3. Deploy spring application với Deployment**](#3-deploy-spring-application-với-deployment)
-      - [**3.1 Define Deployment**](#31-define-deployment)
-      - [**3.2 Deploy Deployment và một số command cơ bản với Deployment**](#32-deploy-deployment-và-một-số-command-cơ-bản-với-deployment)
-    - [**4. Quản lý các biến môi trường với ConfigMap**](#4-quản-lý-các-biến-môi-trường-với-configmap)
-      - [**4.1 Define ConfigMap**](#41-define-configmap)
-      - [**4.2 Bind các biến trong ConfigMap vào trong Pod thông quan các biến môi trường**](#42-bind-các-biến-trong-configmap-vào-trong-pod-thông-quan-các-biến-môi-trường)
-    - [**5. Truy cập service từ bên ngoài cluster với Service**](#5-truy-cập-service-từ-bên-ngoài-cluster-với-service)
-    - [**6. Package manager với helm chart**](#6-package-manager-với-helm-chart)
+    - [**2.1 Deploy spring boot application với docker**](#21-deploy-spring-boot-application-với-docker)
+    - [**2.2 Deploy spring boot application với Kubernetes**](#22-deploy-spring-boot-application-với-kubernetes)
+      - [**2.2.1 Chuẩn bị môi trường**](#221-chuẩn-bị-môi-trường)
+      - [**2.2.2 Làm việc với các thành phần cơ bản Kubernetes**](#222-làm-việc-với-các-thành-phần-cơ-bản-kubernetes)
+        - [**1. Cách define Pod và wraper spring application containers với Pod.**](#1-cách-define-pod-và-wraper-spring-application-containers-với-pod)
+          - [**1.1 Define Pod Template**](#11-define-pod-template)
+          - [**1.2 Deploy Pod lên kubernetes và một số command cơ bản với Pod.**](#12-deploy-pod-lên-kubernetes-và-một-số-command-cơ-bản-với-pod)
+        - [**2. Cách để quản lý các Pods tự động bởi ReplicationController và ReplicaSet**](#2-cách-để-quản-lý-các-pods-tự-động-bởi-replicationcontroller-và-replicaset)
+          - [**2.1 Define `ReplicationController` Template:**](#21-define-replicationcontroller-template)
+          - [**2.2 Deploy `ReplicationController` lên kubernetes và một số command cơ bản với `ReplicationController`.**](#22-deploy-replicationcontroller-lên-kubernetes-và-một-số-command-cơ-bản-với-replicationcontroller)
+          - [**2.3 Define `ReplicaSet` Template:**](#23-define-replicaset-template)
+          - [**2.4 Deploy `ReplicaSet` lên kubernetes và một số command cơ bản với `ReplicaSet`.**](#24-deploy-replicaset-lên-kubernetes-và-một-số-command-cơ-bản-với-replicaset)
+        - [**3. Deploy spring application với Deployment**](#3-deploy-spring-application-với-deployment)
+          - [**3.1 Define Deployment**](#31-define-deployment)
+          - [**3.2 Deploy Deployment và một số command cơ bản với Deployment**](#32-deploy-deployment-và-một-số-command-cơ-bản-với-deployment)
+        - [**4. Quản lý các biến môi trường với ConfigMap**](#4-quản-lý-các-biến-môi-trường-với-configmap)
+          - [**4.1 Define ConfigMap**](#41-define-configmap)
+          - [**4.2 Bind các biến trong ConfigMap vào trong Pod thông quan các biến môi trường**](#42-bind-các-biến-trong-configmap-vào-trong-pod-thông-quan-các-biến-môi-trường)
+        - [**5. Kubernetes networking**](#5-kubernetes-networking)
+        - [**6. Package manager với helm chart**](#6-package-manager-với-helm-chart)
   - [**3. Debug Kubernetes**](#3-debug-kubernetes)
 ## **1. Giới thiệu một số thành phần cơ bản của Kubernetes.**
 
@@ -852,6 +852,6 @@ DATABASE_PASSWORD=password
 ...
 # Kết quả là biến môi trường đã đc update.
 ```
-## **5. Truy cập service từ bên ngoài cluster với Service**
+## **5. Kubernetes networking**
 ## **6. Package manager với helm chart**
 ## **3. Debug Kubernetes**
