@@ -171,7 +171,7 @@ Stopped.
 ## **2.2.2 Làm việc với các thành phần cơ bản Kubernetes**
 
 ## **1. Cách define Pod và wraper spring application containers với Pod.** 
-  
+Pod là đơn vị nhỏ nhất trong Kubernetes. Trong một Pod có thể chứa 1 hoặc nhiều containers. Các containers bên trong Pod sẽ chia sẻ network namespace(các containers gọi nhau bằng localhost được), Các containers bên trong Pod còn chia sẻ volume mount. Tìm hiểu thêm về Pod [tại đây](https://github.com/nbthanh98/study/tree/master/learn-k8s/3.core-components/3.1-working-with-pod).
 ### **1.1 Define Pod Template**
 PodTemplate sẽ được chia thành: `apiVersion`, `kind`, `metadata`, `spec`.
   ```yaml
@@ -922,7 +922,9 @@ Các service bên trong Cluster sẽ gọi nhau thông qua một serviceType = C
 
 - Trong cùng một namespace thì sẽ gọi nhau bằng serviceName luôn.
 - Khác namespace mà gọi nhau thì sẽ gọi như sau: myservice.mynamespace.svc.cluster.local
+
 **Trong cùng namespace**
+
 Service-1:
 ```yml
 apiVersion: v1
