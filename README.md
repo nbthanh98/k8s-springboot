@@ -853,5 +853,175 @@ DATABASE_PASSWORD=password
 # Kết quả là biến môi trường đã đc update.
 ```
 ## **5. Kubernetes networking**
+Phần này sẽ nói về cách mà các service trong Kubernetes cluster có thể gọi nhau. Cách truy cập service từ bên ngoài Kuberentes cluster.
+![](images/service.png)
+
+Ở các phần trước thì nói về `Pod`, truy cập các `Pod` bằng cách dùng port-forward, hoặc là vào `Pod` A gọi `Pod` B thông qua IP. Nhưng có vấn đề là cái IP của `Pod` sẽ bị thay đổi, nếu `Pod` bị xóa đi tạo lại. Giả sử có app-A gọi app-B mà dùng IP của `Pod` thì toang vì IP sẽ bị thay đổi như trên. Thì Kubernetes sẽ phải đẻ ra một ông nào đấy để giải quyết vấn để trên. Thì ngôi sao sáng ở phần này là `Service`. `Service` có đặc điểm là sẽ có IP không thay đổi, mặc dù cho các `Pod` có bị xóa đi tạo lại. `Service` sẽ select các `Pod` thông qua labels. Muốn tìm hiểu thêm về Service có thể xem [ở đây](https://github.com/nbthanh98/study/tree/master/learn-k8s/3.core-components/3.3-service).
+### **5.1 Truy cập service từ bên ngoài Cluster**
+Để mà truy cập service từ bên ngoài Cluster thì sử dụng serviceType = NodePort hoặc dùng Ingress.
+**Define service**
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-k8s
+spec:
+  type: NodePort
+  selector:
+    app: hello-k8s
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 32000
+```
+**Demo**
+```powershell
+kubectl get all -n demo
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/hello-k8s-7f778c9df9-wj9t2   1/1     Running   0          8m44s
+
+# Đây là service mới tạo ra. NodePort có nghĩa là sẽ truy cập được service thông qua port của Node. (30000 ->32000)
+NAME                TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/hello-k8s   NodePort   10.152.183.47   <none>        80:32000/TCP   8m28s
+
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello-k8s   1/1     1            1           8m44s
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-k8s-7f778c9df9   1         1         1       8m44s
+
+# Lấy endpoint, IP: 10.1.28.81:8080 chính là IP của Pod mà service selected đc thông qua labels, nếu có nhiều Pod thì sẽ là 1 list IP.
+kubectl get ep -n demo
+NAME        ENDPOINTS         AGE
+hello-k8s   10.1.28.81:8080   3m34s
+
+# Để ý thì thấy IP của Pod đang giông với ENDPOINTS ở phía trên.
+kubectl get po -n demo -o wide
+NAME                         READY   STATUS    RESTARTS   AGE    IP           NODE   NOMINATED NODE   READINESS GATES
+hello-k8s-7f778c9df9-wj9t2   1/1     Running   0          4m6s   10.1.28.81   nbt    <none>           <none>
+
+# Lấy service:
+kubectl get svc -n demo -o wide
+NAME        TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE     SELECTOR
+hello-k8s   NodePort   10.152.183.47   <none>        80:32000/TCP   4m17s   app=hello-k8s
+
+# Gọi thử service từ bên ngoài cluster thông qua NodePort:
+curl 127.0.0.1:32000/hello-k8s
+/hello-k8s
+
+# Như trên là đã gọi đc service từ bên ngoài cluster.
+```
+### **5.2 Các service gọi nhau bên trong Kubernetes cluster**
+Các service bên trong Cluster sẽ gọi nhau thông qua một serviceType = ClusterIP. Các service sẽ thương gọi nhau bằng service name.
+
+- Trong cùng một namespace thì sẽ gọi nhau bằng serviceName luôn.
+- Khác namespace mà gọi nhau thì sẽ gọi như sau: myservice.mynamespace.svc.cluster.local
+**Trong cùng namespace**
+Service-1:
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-k8s-1
+spec:
+  selector:
+    app: hello-k8s
+  type: ClusterIP
+  ports:
+  - name: hello-k8s
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+```
+
+Service-2:
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-k8s-2
+spec:
+  selector:
+    app: hello-k8s
+  type: ClusterIP
+  ports:
+  - name: hello-k8s
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+```
+**Demo**
+```powershell
+kubectl get svc -n demo
+NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+hello-k8s-1   ClusterIP   10.152.183.219   <none>        80/TCP    2m31s
+hello-k8s-2   ClusterIP   10.152.183.167   <none>        80/TCP    2m31s
+
+kubectl get ep -n demo
+NAME          ENDPOINTS         AGE
+hello-k8s-2   10.1.28.83:8080   2m36s
+hello-k8s-1   10.1.28.80:8080   2m36s
+
+kubectl get po -n demo -o wide 
+NAME                           READY   STATUS    RESTARTS   AGE     IP           NODE   NOMINATED NODE   READINESS GATES
+hello-k8s-2-6f5698545-4fb4v    1/1     Running   0          6m28s   10.1.28.83   nbt    <none>           <none>
+hello-k8s-1-6745c7499f-7m9mp   1/1     Running   0          6m28s   10.1.28.80   nbt    <none>           <none>
+
+# Thực hiên call từ Pod của service-2 sang Pod của service-1
+kubectl exec -it po/hello-k8s-2-6f5698545-4fb4v -n demo sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# curl
+curl: try 'curl --help' or 'curl --manual' for more information
+# curl http://hello-k8s-1/hello-k8s
+/hello-k8s# 
+```
+**Khác namespace**
+```powershell
+# Service bên namespace demo2
+kubectl get all -n demo2
+NAME                               READY   STATUS    RESTARTS   AGE
+pod/hello-k8s-2-6f5698545-w6r4l    1/1     Running   0          49s
+pod/hello-k8s-1-6745c7499f-vh5hx   1/1     Running   0          49s
+
+NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/hello-k8s-1   ClusterIP   10.152.183.47    <none>        80/TCP    49s
+service/hello-k8s-2   ClusterIP   10.152.183.131   <none>        80/TCP    49s
+
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello-k8s-2   1/1     1            1           49s
+deployment.apps/hello-k8s-1   1/1     1            1           49s
+
+NAME                                     DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-k8s-2-6f5698545    1         1         1       49s
+replicaset.apps/hello-k8s-1-6745c7499f   1         1         1       49s
+
+# Service bên namespace demo
+kubectl get all -n demo
+NAME                               READY   STATUS    RESTARTS   AGE
+pod/hello-k8s-2-6f5698545-4fb4v    1/1     Running   0          12m
+pod/hello-k8s-1-6745c7499f-7m9mp   1/1     Running   0          12m
+
+NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/hello-k8s-1   ClusterIP   10.152.183.219   <none>        80/TCP    12m
+service/hello-k8s-2   ClusterIP   10.152.183.167   <none>        80/TCP    12m
+
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello-k8s-2   1/1     1            1           12m
+deployment.apps/hello-k8s-1   1/1     1            1           12m
+
+NAME                                     DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-k8s-2-6f5698545    1         1         1       12m
+replicaset.apps/hello-k8s-1-6745c7499f   1         1         1       12m
+
+# Thực hiện gọi từ service1 (namespace demo) sang service2 (namespace demo2).
+kubectl exec -it hello-k8s-1-6745c7499f-7m9mp -n demo sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# curl http://hello-k8s-2.demo2.svc.cluster.local/hello-k8s     
+/hello-k8s# ^C
+# 
+
+# Như trên là các service có thể gọi nhau mặc dù khác namespace.
+```
 ## **6. Package manager với helm chart**
 ## **3. Debug Kubernetes**
