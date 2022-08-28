@@ -21,7 +21,12 @@
           - [**4.1 Define ConfigMap**](#41-define-configmap)
           - [**4.2 Bind các biến trong ConfigMap vào trong Pod thông quan các biến môi trường**](#42-bind-các-biến-trong-configmap-vào-trong-pod-thông-quan-các-biến-môi-trường)
         - [**5. Kubernetes networking**](#5-kubernetes-networking)
+          - [**5.1 Truy cập service từ bên ngoài Cluster**](#51-truy-cập-service-từ-bên-ngoài-cluster)
+          - [**5.2 Các service gọi nhau bên trong Kubernetes cluster**](#52-các-service-gọi-nhau-bên-trong-kubernetes-cluster)
         - [**6. Package manager với helm chart**](#6-package-manager-với-helm-chart)
+          - [**6.1 Cài đặt helm chart**](#61-cài-đặt-helm-chart)
+          - [**6.2 Tạo helm chart**](#62-tạo-helm-chart)
+          - [**6.3 Thao tác với helm**](#63-thao-tác-với-helm)
   - [**3. Debug Kubernetes**](#3-debug-kubernetes)
 ## **1. Giới thiệu một số thành phần cơ bản của Kubernetes.**
 
@@ -1024,4 +1029,121 @@ kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future versi
 # Như trên là các service có thể gọi nhau mặc dù khác namespace.
 ```
 ## **6. Package manager với helm chart**
+Ở các phần trước thì để mà Deploy một service hoàn chỉnh lên Kubernetes thì cần tạo. Deployment, Service,... Có cái ông helm chart này sẽ đóng gói tất cả các file yaml thành chart. Khi cài hoặc xóa một service trên kubernetes với helm chart thì chỉ cần install và uninstall là xong.
+
+### **6.1 Cài đặt helm chart**
+
+```powershell
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+### **6.2 Tạo helm chart**
+```powershell
+helm create hello-k8s
+
+# Sau khi tạo chart thì sẽ đc cái chart như sau:
+.
+└── hello-k8s
+    ├── charts
+    ├── Chart.yaml
+    ├── templates
+    │   ├── deployment.yaml
+    │   ├── _helpers.tpl
+    │   ├── hpa.yaml
+    │   ├── ingress.yaml
+    │   ├── NOTES.txt
+    │   ├── serviceaccount.yaml
+    │   ├── service.yaml
+    │   └── tests
+    │       └── test-connection.yaml
+    └── values.yaml
+
+4 directories, 10 files
+```
+### **6.3 Thao tác với helm**
+Trong cái helm chart hello-k8s trên thì cái file `values.yaml` là mình cần quan tâm và sửa.
+
+**file values.yaml:**
+```yml
+# Default values for hello-k8s.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1 # Đây là số lượng instance (số lượng Pod).
+
+image:
+  repository: thanhnb1/hello-k8s # Sửa cái image của service mình vào.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+...
+```
+**file Deployment.yaml:**
+```yml
+...
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080 #sửa containers Pod ở đây.
+              protocol: TCP
+          livenessProbe:
+...
+```
+**Demo**
+```powershell
+# install helm.
+helm install hello-k8s  -f hello-k8s/values.yaml  ./hello-k8s/ -n demo
+
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/nbt/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/nbt/.kube/config
+NAME: hello-k8s
+LAST DEPLOYED: Sun Aug 28 23:28:30 2022
+NAMESPACE: demo
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace demo -l "app.kubernetes.io/name=hello-k8s,app.kubernetes.io/instance=hello-k8s" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace demo $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace demo port-forward $POD_NAME 8080:$CONTAINER_PORT
+
+# Get resouces vừa deploy:
+kubectl get all -n demo
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/hello-k8s-58bfbd9fbc-wx8jc   1/1     Running   0          32s
+
+NAME                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/hello-k8s   ClusterIP   10.152.183.163   <none>        80/TCP    32s
+
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello-k8s   1/1     1            1           32s
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-k8s-58bfbd9fbc   1         1         1       32s
+
+# Như trên là đã deploy được thành công service bằng helm chart.
+
+# Gỡ service bằng helm chart
+helm uninstall hello-k8s -n demo
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/nbt/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/nbt/.kube/config
+release "hello-k8s" uninstalled
+
+# Uninstall helm chart phát là xóa hết luôn:
+kubectl get all -n demo
+No resources found in demo namespace.
+```
+
 ## **3. Debug Kubernetes**
