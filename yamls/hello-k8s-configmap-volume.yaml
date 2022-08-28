@@ -1,0 +1,24 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: hello-k8s-cm-as-volume
+data:
+  application.yaml: |-
+    server:
+      port: 8080
+    spring:
+      application:
+        name: hello-k8s
+      profiles:
+        active: staging
+      datasource:
+        url: jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+        username: root
+        password: password
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      jpa:
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        properties:
+          hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+        hibernate:
+          use-new-id-generator-mappings: false

@@ -1,0 +1,9 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: hello-k8s
+data:
+  ENV: staging
+  DATABASE_URL: jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+  DATABASE_USER: root
+  DATABASE_PASSWORD: password

@@ -1,14 +1,14 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: SERVER_PORT:8080
 spring:
   application:
     name: hello-k8s
   profiles:
-    active: ${ENV:dev}
+    active: ENV:dev
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false}
-    username: ${DATABASE_USER:root}
-    password: ${DATABASE_PASSWORD:password}
+    url: DATABASE_URL:jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+    username: DATABASE_USER:root
+    password: DATABASE_PASSWORD:password
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect

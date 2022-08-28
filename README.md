@@ -2,13 +2,26 @@
 ## **Nội dung gồm:**
   - [**1. Giới thiệu một số thành phần cơ bản của Kubernetes.**](#1-giới-thiệu-một-số-thành-phần-cơ-bản-của-kubernetes)
   - [**2. Deploy Spring boot application lên Kubernetes.**](#2-deploy-spring-boot-application-lên-kubernetes)
-    - [**2.1 Deploy spring boot application với docker**](#21-deploy-spring-boot-application-với-docker)
-    - [**2.2 Deploy spring boot application với Kubernetes**](#22-deploy-spring-boot-application-với-kubernetes)
-      - [**2.2.1 Chuẩn bị môi trường**](#221-chuẩn-bị-môi-trường)
-      - [**2.2.2 Làm việc với các thành phần cơ bản Kubernetes**](#222-làm-việc-với-các-thành-phần-cơ-bản-kubernetes)
-        - [**1. Cách define Pod và wraper spring application containers với Pod.**](#1-cách-define-pod-và-wraper-spring-application-containers-với-pod)
-        - [**2. Cách để quản lý các Pods tự động bởi ReplicationController và ReplicaSet**](#2-cách-để-quản-lý-các-pods-tự-động-bởi-replicationcontroller-và-replicaset)
-        - [**3. Deploy spring application với Deployment**](#3-deploy-spring-application-với-deployment)
+  - [**2.1 Deploy spring boot application với docker**](#21-deploy-spring-boot-application-với-docker)
+  - [**2.2 Deploy spring boot application với Kubernetes**](#22-deploy-spring-boot-application-với-kubernetes)
+  - [**2.2.1 Chuẩn bị môi trường**](#221-chuẩn-bị-môi-trường)
+  - [**2.2.2 Làm việc với các thành phần cơ bản Kubernetes**](#222-làm-việc-với-các-thành-phần-cơ-bản-kubernetes)
+    - [**1. Cách define Pod và wraper spring application containers với Pod.**](#1-cách-define-pod-và-wraper-spring-application-containers-với-pod)
+      - [**1.1 Define Pod Template**](#11-define-pod-template)
+      - [**1.2 Deploy Pod lên kubernetes và một số command cơ bản với Pod.**](#12-deploy-pod-lên-kubernetes-và-một-số-command-cơ-bản-với-pod)
+    - [**2. Cách để quản lý các Pods tự động bởi ReplicationController và ReplicaSet**](#2-cách-để-quản-lý-các-pods-tự-động-bởi-replicationcontroller-và-replicaset)
+      - [**2.1 Define `ReplicationController` Template:**](#21-define-replicationcontroller-template)
+      - [**2.2 Deploy `ReplicationController` lên kubernetes và một số command cơ bản với `ReplicationController`.**](#22-deploy-replicationcontroller-lên-kubernetes-và-một-số-command-cơ-bản-với-replicationcontroller)
+      - [**2.3 Define `ReplicaSet` Template:**](#23-define-replicaset-template)
+      - [**2.4 Deploy `ReplicaSet` lên kubernetes và một số command cơ bản với `ReplicaSet`.**](#24-deploy-replicaset-lên-kubernetes-và-một-số-command-cơ-bản-với-replicaset)
+    - [**3. Deploy spring application với Deployment**](#3-deploy-spring-application-với-deployment)
+      - [**3.1 Define Deployment**](#31-define-deployment)
+      - [**3.2 Deploy Deployment và một số command cơ bản với Deployment**](#32-deploy-deployment-và-một-số-command-cơ-bản-với-deployment)
+    - [**4. Quản lý các biến môi trường với ConfigMap**](#4-quản-lý-các-biến-môi-trường-với-configmap)
+      - [**4.1 Define ConfigMap**](#41-define-configmap)
+      - [**4.2 Bind các biến trong ConfigMap vào trong Pod thông quan các biến môi trường**](#42-bind-các-biến-trong-configmap-vào-trong-pod-thông-quan-các-biến-môi-trường)
+    - [**5. Truy cập service từ bên ngoài cluster với Service**](#5-truy-cập-service-từ-bên-ngoài-cluster-với-service)
+    - [**6. Package manager với helm chart**](#6-package-manager-với-helm-chart)
   - [**3. Debug Kubernetes**](#3-debug-kubernetes)
 ## **1. Giới thiệu một số thành phần cơ bản của Kubernetes.**
 
@@ -33,7 +46,7 @@ Trên hình thì thấy `Kubernetes architecture` gồm có như:
 ## **2. Deploy Spring boot application lên Kubernetes.**
 Phần này sẽ deploy spring boot service từ docker cho đến Kubernetes.
 
-### **2.1 Deploy spring boot application với docker**
+## **2.1 Deploy spring boot application với docker**
 API:
 ```java
 package com.thanhnb.demok8s.controllers;
@@ -135,9 +148,9 @@ e45cfbc98a50: Mounted from adoptopenjdk/openjdk11
 762d8e1a6054: Mounted from adoptopenjdk/openjdk11 
 latest: digest: sha256:018c1ae845eb007936172ff901a0fc492ea66714d497590214474e6561bc6b2e size: 1994
 ```
-### **2.2 Deploy spring boot application với Kubernetes**
+## **2.2 Deploy spring boot application với Kubernetes**
 
-### **2.2.1 Chuẩn bị môi trường**
+## **2.2.1 Chuẩn bị môi trường**
 
 Ở local thì để tạo nhanh Kubernetes cluster thì có thể dùng [MicroK8s](https://microk8s.io/docs/getting-started) hoặc là [MiniKube](https://computingforgeeks.com/how-to-install-minikube-on-ubuntu-debian-linux/) đều được.
 
@@ -150,11 +163,12 @@ Started.
 nbt@nbt:~$ microk8s stop
 Stopped.
 ```
-### **2.2.2 Làm việc với các thành phần cơ bản Kubernetes**
+## **2.2.2 Làm việc với các thành phần cơ bản Kubernetes**
 
-### **1. Cách define Pod và wraper spring application containers với Pod.** 
+## **1. Cách define Pod và wraper spring application containers với Pod.** 
   
-  **Define Pod Template**: sẽ được chia thành: `apiVersion`, `kind`, `metadata`, `spec`.
+### **1.1 Define Pod Template**
+PodTemplate sẽ được chia thành: `apiVersion`, `kind`, `metadata`, `spec`.
   ```yaml
   apiVersion: v1
   kind: Pod # là một loại Object trong Kubernetes.
@@ -192,7 +206,7 @@ Stopped.
         name:  http
     restartPolicy: Always
   ```
-  **Deploy Pod lên kubernetes và một số command cơ bản với Pod.**
+### **1.2 Deploy Pod lên kubernetes và một số command cơ bản với Pod.**
   ```shell
   # Để deploy Pod lên K8s thì dùng lệnh "kubectl apply -f <path file Pod template> -n <namespace>"
   kubectl apply -f pod-hello-k8s.yaml 
@@ -248,11 +262,11 @@ Stopped.
   
   # Xóa pod thì không còn thấy Pod hello-k8s không đc tạo lại.
   ```
-### **2. Cách để quản lý các Pods tự động bởi ReplicationController và ReplicaSet**
+## **2. Cách để quản lý các Pods tự động bởi ReplicationController và ReplicaSet**
   
   Ở phần trước thì đã tạo Pod bằng podTemplate (file yaml), deploy Pod lên kubernetes, thử xóa Pod thì không thấy nó đc tạo lại. Giờ mà muốn quản lý được số lượng instance (số lượng Pod) luôn ở số lượng mong muốn và khi Pod bị vấn đề gì đó mà bị xóa thì Kubernetes phải tạo lại tự động. Kubernetes sẽ sử dụng `ReplicaSet`, `ReplicationController` để thực hiện những yêu cầu trên.
 
-  **Define `ReplicationController` Template:**
+### **2.1 Define `ReplicationController` Template:**
   ```yml
   apiVersion: v1
   kind: ReplicationController # Loại object là: `ReplicationController`.
@@ -284,7 +298,7 @@ Stopped.
           ports:
           - containerPort: 8080
   ```
-  **Deploy `ReplicationController` lên kubernetes và một số command cơ bản với `ReplicationController`.**
+### **2.2 Deploy `ReplicationController` lên kubernetes và một số command cơ bản với `ReplicationController`.**
   ```powershell
   kubectl apply -f replication-controller.yaml -n demo
   replicationcontroller/hello-k8s created
@@ -382,7 +396,7 @@ Stopped.
 
   # Khi xóa `ReplicationController` thì các Pod được tạo bởi `ReplicationController` thì sẽ bị xóa.
   ```
-  **Define `ReplicaSet` Template:**
+### **2.3 Define `ReplicaSet` Template:**
   ```yml
   apiVersion: apps/v1
   kind: ReplicaSet
@@ -406,7 +420,7 @@ Stopped.
           ports:
           - containerPort: 8080
   ```
-  **Deploy `ReplicaSet` lên kubernetes và một số command cơ bản với `ReplicaSet`.**
+### **2.4 Deploy `ReplicaSet` lên kubernetes và một số command cơ bản với `ReplicaSet`.**
   ```powershell
   kubectl get all -n demo
   NAME                  READY   STATUS    RESTARTS   AGE
@@ -481,6 +495,363 @@ Stopped.
   # replicaset này có replicaSet=3, đang ra khi apply lệnh này thì phải tạo ra 3 Pod nữa chứ. Nhưng vì
   # `matchExpressions` đã bao gồm cả 2 Pod trước đó, nên khi apply lệnh này thì sẽ chỉ tạo thêm 1 Pod nữa thôi.
   hello-k8s-vdqwj     1/1     Running   0          4s
+
+  kubectl get po --show-labels -n demo
+  NAME                READY   STATUS    RESTARTS       AGE   LABELS
+  hello-k8s-stating   1/1     Running   1 (100m ago)   10h   app=hello-k8s,env=staging
+  hello-k8s-vdqwj     1/1     Running   1 (100m ago)   10h   app=hello-k8s,env=develop
+  hello-k8s-develop   1/1     Running   1 (100m ago)   10h   app=hello-k8s,env=develop
   ```
-#### **3. Deploy spring application với Deployment**
+  **Update podTemplate của các Pod được quản lý bởi ReplicaSet**
+
+  Thực hiện update các Pods hiện tại lên một version mới từ `thanhnb1/hello-k8s:latest` sang `thanhnb1/hello-k8s:v2`.
+  ```yml
+  apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    name: hello-k8s
+    labels:
+      app: hello-k8s
+  spec:
+    replicas: 3
+    selector:
+      matchExpressions:
+        - key: env
+          operator: In
+          values:
+            - develop
+            - staging
+    template:
+      metadata:
+        labels:
+          app: hello-k8s
+          env: develop
+      spec:
+        containers:
+        - name: hello-k8s
+          image: thanhnb1/hello-k8s:v2
+          ports:
+          - containerPort: 8080
+  ```
+  **Demo**
+  ```powershell
+
+  # Trước khi update podTemplate với ReplicaSet.
+  kubectl get all -n demo
+  NAME                    READY   STATUS    RESTARTS        AGE
+  pod/hello-k8s-stating   1/1     Running   1 (5h50m ago)   14h
+  pod/hello-k8s-vdqwj     1/1     Running   1 (5h50m ago)   14h
+  pod/hello-k8s-develop   1/1     Running   1 (5h50m ago)   14h
+  
+  NAME                        DESIRED   CURRENT   READY   AGE
+  replicaset.apps/hello-k8s   3         3         3       14h
+  
+  # Thực hiện describe Pod để xem các thông tin chi tiết của Pod.
+  kubectl describe pod/hello-k8s-develop -n demo
+  ...
+  Controlled By:  ReplicaSet/hello-k8s
+  Containers:
+    hello-k8s:
+      Container ID:   containerd://66fd56caa9cc82992484e7110ba8da0938a65cf9250dbf425e6de613bc66cc4e
+      Image:          thanhnb1/hello-k8s:latest
+  ...
+
+  # Thực hiện update podTemplate: update image từ `thanhnb1/hello-k8s:latest` => `thanhnb1/hello-k8s:v2`.
+  kubectl apply -f update-pod-new-version-replicaset.yaml -n demo
+  replicaset.apps/hello-k8s configured
+
+  # Xem Pod sau khi update podTemplate. Trong nó không có gì thay đổi nhỉ?
+  kubectl get all -n demo
+  NAME                    READY   STATUS    RESTARTS        AGE
+  pod/hello-k8s-stating   1/1     Running   1 (5h50m ago)   14h
+  pod/hello-k8s-vdqwj     1/1     Running   1 (5h50m ago)   14h
+  pod/hello-k8s-develop   1/1     Running   1 (5h50m ago)   14h
+  
+  NAME                        DESIRED   CURRENT   READY   AGE
+  replicaset.apps/hello-k8s   3         3         3       14h
+
+  # Thực hiện describe Pod xem các Pod đang chạy image nào? đã update image version hay chưa?
+  # Kết quả là kể cả sau khi update podTemplate thì vẫn không có gì thay đổi, Pod vẫn chạy image cũ(thanhnb1/hello-k8s:latest).
+  ...
+  Controlled By:  ReplicaSet/hello-k8s
+  Containers:
+    hello-k8s:
+      Container ID:   containerd://66fd56caa9cc82992484e7110ba8da0938a65cf9250dbf425e6de613bc66cc4e
+      Image:          thanhnb1/hello-k8s:latest
+  ...
+
+  # Thực hiện xóa 1 Pod đi, xem Pod mới đc tạo ra có chạy image version mới hay chưa?
+  kubectl delete pod/hello-k8s-develop -n demo
+  pod "hello-k8s-develop" deleted
+
+  kubectl get all -n demo
+  NAME                    READY   STATUS    RESTARTS        AGE
+  pod/hello-k8s-stating   1/1     Running   1 (5h59m ago)   14h
+  pod/hello-k8s-vdqwj     1/1     Running   1 (5h59m ago)   14h
+  pod/hello-k8s-t6fbm     1/1     Running   0               11s
+
+  # Thực hiện describe pod mới đc tạo xem có chạy image mới hay chưa?
+  kubectl describe pod/hello-k8s-t6fbm -n demo
+  ...
+  Controlled By:  ReplicaSet/hello-k8s
+  Containers:
+    hello-k8s:
+      Container ID:   containerd://a5863c96ecdd97403593dc48e7841bca2cd254ed8712d45a7b24794fd964883d
+      Image:          thanhnb1/hello-k8s:v2
+  ...
+ # Kết quả là Pod mới đc tạo thì đã chạy image version mới (thanhnb1/hello-k8s:v2),
+ # còn mấy ông Pod cũ thì vẫn chạy image version cũ (thanhnb1/hello-k8s:latest).
+ # Thế này thì mỗi lần update podTemplate thì to tay để đi xóa các Pod cũ để nó tự tạo Pod mới thì mới ăn đc cái update.
+ # Thế này thì tù qué, phần sau nói về  `Deployment` thì `Deployment` sẽ giải quyết các vấn đề trên nha.
+  ```
+
+## **3. Deploy spring application với Deployment**
+![](images/deployment.png)
+
+Ở phần 1 thì mình tạo ra `Pod` để wrap container rồi deploy lên kubernetes, nhưng `Pod` bị cái là không tự self-healing được (`Pod` bị xóa thì không tự tạo lại được). Sang đến phần 2 thì nâng cấp hơn sử dụng `ReplicationController` và `ReplicaSet` để quản lý cac `Pod` thông qua việc matchLabels, và cũng thực hiện scale-up hoặc scale-down Pod, Nhưng `ReplicationController` và `ReplicaSet` cũng bị một cái là khi thực hiện update podTemplate thì nó không tự update đc, mà phải tự xóa các pod bằng tay, để `ReplicationController` và `ReplicaSet` đi tạo lại Pod, lúc này các Pod đc tạo lại thì mới đc update podTemplate. Những vấn đề của `ReplicationController` và `ReplicaSet` sẽ đc giải quyết bởi `Deployment`.
+
+Về bản chất thì `Deployment` vẫn sẽ sử dụng `ReplicaSet` cho việc self-healing và scalability. Mỗi lần tạo 1 `Deployment` thì sẽ tạo mới 1 `ReplicaSet` cũng được tạo theo.
+
+![](images/deployment-2.png)
+### **3.1 Define Deployment**
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s
+  labels:
+    app: hello-k8s
+spec:
+  selector:
+    matchLabels:
+      app: hello-k8s
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: hello-k8s
+    spec:
+      containers:
+        - name: hello-k8s
+          image: thanhnb1/hello-k8s:latest
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 8080
+```
+### **3.2 Deploy Deployment và một số command cơ bản với Deployment**
+```powershell
+# Thực hiện apply file depoyment.
+kubectl apply -f 1.deployment.yaml -n demo
+deployment.apps/hello-k8s created
+
+# Thực hiện get all các resources. Khi deploy cái deployment thì có luôn replicaSet.
+kubectl get all -n demo
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/hello-k8s-6d8d7d9588-vqxxx   1/1     Running   0          7s
+
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello-k8s   1/1     1            1           7s
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-k8s-6d8d7d9588   1         1         1       7s
+
+# Thực hiện update podTemplate, từ `thanhnb1/hello-k8s:latest` thành `thanhnb1/hello-k8s:v2`.
+kubectl apply -f 1.deployment.yaml -n demo
+deployment.apps/hello-k8s configured
+
+# Sau khi Update podTemplate, replicaset mới sẽ đc tạo ra.
+kubectl get all -n demo
+NAME                             READY   STATUS        RESTARTS   AGE
+pod/hello-k8s-54cc866d55-6qnst   1/1     Running       0          5s
+
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello-k8s   1/1     1            1           8m17s
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-k8s-54cc866d55   1         1         1       2m8s
+replicaset.apps/hello-k8s-6d8d7d9588   0         0         0       8m17s
+
+# Pod `hello-k8s-6d8d7d9588-ssc5h` này bị xóa và `hello-k8s-54cc866d55-6qnst` được tạo mới tự đông.
+kubectl get po -n demo -w
+NAME                         READY   STATUS    RESTARTS   AGE
+hello-k8s-6d8d7d9588-ssc5h   1/1     Running   0          71s
+hello-k8s-54cc866d55-6qnst   0/1     Pending   0          0s
+hello-k8s-54cc866d55-6qnst   0/1     Pending   0          0s
+hello-k8s-54cc866d55-6qnst   0/1     ContainerCreating   0          0s
+hello-k8s-54cc866d55-6qnst   0/1     ContainerCreating   0          0s
+hello-k8s-54cc866d55-6qnst   1/1     Running             0          3s
+hello-k8s-6d8d7d9588-ssc5h   1/1     Terminating         0          85s
+hello-k8s-6d8d7d9588-ssc5h   1/1     Terminating         0          115s
+hello-k8s-6d8d7d9588-ssc5h   0/1     Terminating         0          116s
+hello-k8s-6d8d7d9588-ssc5h   0/1     Terminating         0          116s
+hello-k8s-6d8d7d9588-ssc5h   0/1     Terminating         0          116s
+
+# Deployment có thêm cái nữa là rollback lại version cũ, đó là lý do tại sao mỗi lần update deployment thì 1 cái replicaSet mới đc tạo.
+kubectl rollout history deployment/hello-k8s -n demo
+deployment.apps/hello-k8s 
+REVISION  CHANGE-CAUSE
+3         <none>
+4         <none>
+
+# rollback về một version nào trước đó.
+kubectl rollout undo deployment/hello-k8s --to-revision=3 -n demo
+deployment.apps/hello-k8s rolled back
+
+# Thêm note `CHANGE-CAUSE` để sau dễ dang rollback hơn.
+...
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s
+  annotations:
+    kubernetes.io/change-cause: "update image from latest to v2"
+...
+
+hoặc là: 
+kubectl annotate deployment awesome-app kubernetes.io/change-cause="note here"
+
+# Show history
+kubectl rollout history deployment/hello-k8s -n demo
+deployment.apps/hello-k8s 
+REVISION  CHANGE-CAUSE
+5         <none>
+6         update image from latest to v2
+```
+## **4. Quản lý các biến môi trường với ConfigMap**
+Thường các application sẽ có các biến môi trường để có thể tùy biến theo tường môi trường khi deploy. Nếu mà không có các biến môi trường thì khi muốn update các giá trị bên trong file config thì sẽ phải build lại image mới. Kubernetes có một Object để quản lý các biến môi trường này đó là: ConfigMap.
+### **4.1 Define ConfigMap**
+```yml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: hello-k8s
+data:
+  ENV: dev
+  DATABASE_URL: jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+  DATABASE_USER: root
+  DATABASE_PASSWORD: password
+```
+### **4.2 Bind các biến trong ConfigMap vào trong Pod thông quan các biến môi trường**
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s
+  annotations:
+    kubernetes.io/change-cause: "update image from latest to v2"
+  labels:
+    app: hello-k8s
+spec:
+  selector:
+    matchLabels:
+      app: hello-k8s
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: hello-k8s
+    spec:
+      containers:
+        - name: hello-k8s
+          image: thanhnb1/hello-k8s:v3
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+
+          # Đây là phần bind các biến môi trường vào trong Pod từ configMap.    
+          env:
+            - name: ENV # Tên biến môi trường.
+              valueFrom: # được lấy từ đâu?
+                configMapKeyRef: # Lấy ở configMap có tên là: hello-k8s theo key: ENV
+                  name: hello-k8s
+                  key: ENV
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: DATABASE_URL
+            - name: DATABASE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: DATABASE_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: DATABASE_PASSWORD
+          ports:
+            - containerPort: 8080
+```
+**Demo**
+```powershell
+# apply file configMap
+kubectl apply -f hello-k8s-configMap-env.yaml -n demo
+configmap/hello-k8s created
+
+# apply file deployment
+kubectl apply -f hello-k8s-configmap-env.yaml -n demo
+deployment.apps/hello-k8s created
+
+# Xem các biên môi trường bên trong Pod.
+kubectl exec -it pod/hello-k8s-cd59f95ff-hkf2l -n demo sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# printenv
+# Biên môi trường trong configMap đã đc bind vào bên trong Pod.
+DATABASE_USER=root
+KUBERNETES_PORT=tcp://10.152.183.1:443
+KUBERNETES_SERVICE_PORT=443
+DATABASE_URL=jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+...
+
+# Call thử API:
+# curl http://localhost:8080/v2/get-all-env
+ApplicationConfigs{env='dev', dataSourceUrl='jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false', userName='root', password='password'}
+#
+
+# Thực hiên Update các biên môi trường.
+ENV: staging
+DATABASE_URL: jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+DATABASE_USER: root
+DATABASE_PASSWORD: password
+
+kubectl apply -f hello-k8s-configMap-env.yaml -n demo
+configmap/hello-k8s configured
+
+# Khi update các biến môi trường thì sẽ phải rollout lại deployment.
+kubectl rollout restart deployment/hello-k8s -n demo
+deployment.apps/hello-k8s restarted
+
+kubectl exec -it pod/hello-k8s-68bcbcf7dd-jpxgd -n demo sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# printenv
+DATABASE_USER=root
+DATABASE_URL=jdbc:mysql://localhost:3306/hello_k8s?autoReconnect=true&useSSL=false
+ENV=staging
+DATABASE_PASSWORD=password
+...
+# Kết quả là biến môi trường đã đc update.
+```
+## **5. Truy cập service từ bên ngoài cluster với Service**
+## **6. Package manager với helm chart**
 ## **3. Debug Kubernetes**

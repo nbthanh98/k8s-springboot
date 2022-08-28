@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-k8s
+  annotations:
+    kubernetes.io/change-cause: "update image from latest to v2"
+  labels:
+    app: hello-k8s
+spec:
+  selector:
+    matchLabels:
+      app: hello-k8s
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: hello-k8s
+    spec:
+      containers:
+        - name: hello-k8s
+          image: thanhnb1/hello-k8s:v3
+          resources:
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          env:
+            - name: ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: ENV
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: DATABASE_URL
+            - name: DATABASE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: DATABASE_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-k8s
+                  key: DATABASE_PASSWORD
+          ports:
+            - containerPort: 8080
