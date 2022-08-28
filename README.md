@@ -1,4 +1,5 @@
 # **Kubernetes vỡ lòng**
+Nội dung dựa trên kiến thức cá nhân, chỉ nên sử dụng mang tính chất tham khảo.
 ## **Nội dung gồm:**
   - [**1. Giới thiệu một số thành phần cơ bản của Kubernetes.**](#1-giới-thiệu-một-số-thành-phần-cơ-bản-của-kubernetes)
   - [**2. Deploy Spring boot application lên Kubernetes.**](#2-deploy-spring-boot-application-lên-kubernetes)
